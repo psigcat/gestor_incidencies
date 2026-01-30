@@ -1,0 +1,19 @@
+{
+	"db": {
+		"service": "gis_ctbb"
+	},
+	"layers": {
+		"x_san_aicsa_nodes": {
+			"id": "id",
+			"driver": "postgres",
+			"alias": "Nodes",
+			"schema": "cicle_aigua"
+		},
+		"x_san_aicsa_trams": {
+			"id": "id",
+			"driver": "postgres",
+			"alias": "Trams",
+			"schema": "cicle_aigua"
+		}
+	}
+}

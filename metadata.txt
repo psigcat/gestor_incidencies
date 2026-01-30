@@ -1,0 +1,25 @@
+[general]
+name=Gestor d'incidències
+qgisMinimumVersion=3.38
+qgisMaximumVersion=3.99
+description=Gestionar incidències de municipis
+version=0.1
+author=PSIG
+email=geraldo@servus.at
+
+about=Gestionar incidències de municipis
+
+tracker=https://github.com/psigcat/gestor_incidencies/issues
+repository=https://github.com/psigcat/gestor_incidencies
+
+hasProcessingProvider=no
+tags=python
+homepage=https://github.com/psigcat/gestor_incidencies
+category=Plugins
+icon=icon.png
+experimental=False
+deprecated=False
+server=False
+
+# Uncomment the following line and add your changelog:
+# changelog=
