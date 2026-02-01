@@ -197,7 +197,6 @@ class gestor_incidencies:
         if self.first_start == True:
             self.first_start = False
             self.dlg = gestor_incidenciesDialog()
-            #self.utils.show_selected_features(layer, selected_features)
             self.utils.show_resume_groupbox(selected_features)
 
         self.dlg.show()

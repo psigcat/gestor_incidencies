@@ -193,32 +193,3 @@ class gestor_incidencies_utils:
 	# 		return False
 
 	# 	return True
-
-
-	def show_selected_features(self, layer, features):
-		""" Show selected trees or superficies in table view """
-
-		# for feature in features:
-			# print(feature.attributes())
-
-		#self.tableView = QgsAttributeTableView(self)
-		self.layerCache = QgsVectorLayerCache(layer, len(features))
-		self.modelTrees = QgsAttributeTableModel(self.layerCache)
-		self.modelTrees.loadLayer()
-
-		self.tableFilterModel = QgsAttributeTableFilterModel(self.parent.iface.mapCanvas(), self.modelTrees, parent=self.modelTrees)
-		self.tableFilterModel.setFilterMode(QgsAttributeTableFilterModel.ShowSelected)
-		self.parent.dlg.tbl_elements.setModel(self.tableFilterModel)
-
-		# show count
-		self.parent.dlg.label_elements.setText(DEFAULT_LABEL_ELEMENTS + "[" + str(self.tableFilterModel.rowCount()) + "]")
-
-		# hide columns
-		# for i in range(self.model.columnCount()):
-			# fieldname = self.model.headerData(i, Qt.Horizontal)
-			# if fieldname not in ARBRES_TABLE_FIELDS:
-				# self.dlg_create.tbl_main.setColumnHidden(i, True)
-
-		# set column width
-		# fieldindex = self.model.fieldIndex('esp_nom')
-		# self.dlg_create.tbl_main.setColumnWidth(fieldindex, 300)
