@@ -30,8 +30,10 @@ class gestor_incidencies_utils:
 	
 				param["db"] = {
 					"service": config["db"]["service"],
-					#"database": config["db"]["database"],
-					#"schema": config["db"]["schema"]
+					"schema": config["db"]["schema"],
+					"tbl_incidencies": config["db"]["tbl_incidencies"],
+					"tbl_correlacions": config["db"]["tbl_correlacions"],
+					"tbl_fotos": config["db"]["tbl_incidencies"],
 				}
 				param["layers"] = config["layers"]
 

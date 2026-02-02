@@ -58,6 +58,7 @@ class gestor_incidencies:
 
         self.first_start = None
         self.param = {}
+        self.selected_features = None
 
 
     def tr(self, message):
@@ -180,16 +181,16 @@ class gestor_incidencies:
     def run(self):
         """Run method that performs all the real work"""
 
-        selected_features = self.utils.get_all_selected_features()
+        self.selected_features = self.utils.get_all_selected_features()
 
-        if len(selected_features) < 1:
+        if len(self.selected_features) < 1:
             self.iface.messageBar().pushMessage("Warning", f"No element seleccionat! Has de seleccionar al menys un element.", level=Qgis.Warning, duration=5)
             return
 
-        total_feature_count = sum(len(features) for features in selected_features.values())
-        print(f"{total_feature_count} elements seleccionats en {len(selected_features)} capes.")
+        total_feature_count = sum(len(features) for features in self.selected_features.values())
+        print(f"{total_feature_count} elements seleccionats en {len(self.selected_features)} capes.")
 
-        if not self.utils.check_selection_validity(selected_features, self.param):
+        if not self.utils.check_selection_validity(self.selected_features, self.param):
             return
 
         print("open")
@@ -197,12 +198,20 @@ class gestor_incidencies:
         if self.first_start == True:
             self.first_start = False
             self.dlg = gestor_incidenciesDialog()
-            self.utils.show_resume_groupbox(selected_features)
+            self.dlg.buttonBox.accepted.disconnect()
+            self.dlg.buttonBox.accepted.connect(self.process)
+            self.utils.show_resume_groupbox(self.selected_features)
 
         self.dlg.show()
         result = self.dlg.exec_()
 
         if result:
-            # Do something useful here - delete the line containing pass and
-            # substitute with your code.
             pass
+
+
+    def process(self):
+        """ execute actions when ok clicked """
+
+        self.db = gestor_incidencies_database(self, self.plugin_dir, self.param['db'])
+        if self.db:
+            self.db.insert_incidencia(self.selected_features)
