@@ -1,6 +1,12 @@
 {
 	"db": {
-		"service": "gis_ctbb"
+		"service": "gis_ctbb",
+		"tbl_incidencies": "cicle_aigua.incidencies",
+		"tbl_correlacions": "cicle_aigua.incidencies_correlacions",
+		"tbl_fotos": "cicle_aigua.incidencies_fotos",
+		"fields": ["data_inici", "descripcio", "estat"],
+		"fields_mandatory": ["data_inici"],
+		"folder_fotos": "/home/gerald/Documents/PSIG/gestor_incidencies/fotos"
 	},
 	"layers": {
 		"x_san_aicsa_nodes": {
