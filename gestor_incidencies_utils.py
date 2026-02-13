@@ -6,6 +6,7 @@ from qgis.PyQt.QtWidgets import QLabel, QGridLayout, QPushButton
 
 import os.path
 import json
+import sip
 
 
 DEFAULT_LABEL_ELEMENTS = "Elements: "
@@ -30,10 +31,11 @@ class gestor_incidencies_utils:
 	
 				param["db"] = {
 					"service": config["db"]["service"],
-					"schema": config["db"]["schema"],
 					"tbl_incidencies": config["db"]["tbl_incidencies"],
 					"tbl_correlacions": config["db"]["tbl_correlacions"],
 					"tbl_fotos": config["db"]["tbl_incidencies"],
+					"fields": config["db"]["fields"],
+					"fields_mandatory": config["db"]["fields_mandatory"]
 				}
 				param["layers"] = config["layers"]
 
@@ -74,58 +76,29 @@ class gestor_incidencies_utils:
 		return True
 
 
-	def show_resume_groupbox_old(self, selection_dict):
-		"""
-		Formats the selection data and updates the UI widget.
-		
-		:param selection_dict: The dict from get_all_selected_features()
-		:param resume_widget: The widget inside your GroupBox (e.g., a QLabel or QTextEdit)
-		"""
-
-		group_box = self.parent.dlg.resum_box
-		layout = group_box.layout()
-		if layout is None:
-			layout = QVBoxLayout(group_box)
-			group_box.setLayout(layout)
-
-		# Generate a label for each layer
-		for layer_name, features in selection_dict.items():
-			layer = QgsProject.instance().mapLayersByName(layer_name)[0]
-			
-			count = len(features)
-			
-			geom_enum = layer.geometryType()
-			geom_name = QgsWkbTypes.geometryDisplayString(geom_enum)
-			
-			label_text = f"{count} features selected in layer {layer_name} [{geom_name}]"
-			
-			new_label = QLabel(label_text)
-			layout.addWidget(new_label)
-
-		layout.addStretch()
-
-
 	def show_resume_groupbox(self, selection_dict):
-		"""
-		Clears the resume_box and creates a grid of info labels and action buttons.
-		"""
+		""" Clears the resume_box and creates a grid of info labels and action buttons. """
+
 		group_box = self.parent.dlg.resum_box
 		
-		# Setup or replace the layout with a QGridLayout
+		# completely clear old content
 		if group_box.layout() is not None:
 			old_layout = group_box.layout()
 			while old_layout.count():
 				item = old_layout.takeAt(0)
-				if item.widget():
-					item.widget().deleteLater()
-		
+				widget = item.widget()
+				if widget is not None:
+					widget.hide()
+					widget.setParent(None)
+					sip.delete(widget)
+			sip.delete(old_layout)
+
 		layout = QGridLayout(group_box)
 		group_box.setLayout(layout)
 
 		def open_table_at_top(layer):
 			config = layer.attributeTableConfig()
 			config.setSortExpression(None) 
-			#config.setSelectedOnTop(True) 
 
 			config.setSortExpression('is_selected()')
 			config.setSortOrder(Qt.DescendingOrder)
@@ -156,7 +129,8 @@ class gestor_incidencies_utils:
 			# Data preparation
 			count = len(features)
 			geom_name = QgsWkbTypes.geometryDisplayString(layer.geometryType())
-			label_text = f"{count} features selected in layer {layer_name} [{geom_name}]"
+			label_text = f"{count} objectes seleccionats a la capa {layer_name} [{geom_name}]"
+			print(i, label_text)
 			
 			# Column 0: The Info Label
 			label = QLabel(label_text)
@@ -172,26 +146,5 @@ class gestor_incidencies_utils:
 			btn_zoom.clicked.connect(lambda checked=False, l=layer: zoom_and_show(l))
 			layout.addWidget(btn_zoom, i, 2)
 
-		# Add a stretch row at the bottom so elements don't spread out vertically
 		layout.setRowStretch(len(selection_dict), 1)
-		# Ensure column 0 takes up most of the space
 		layout.setColumnStretch(0, 1)
-
-
-	# def check_layer_compability(self, features, param):
-	# 	"""  """
-
-	# 	uri_components = QgsProviderRegistry.instance().decodeUri(layer.dataProvider().name(), layer.publicSource());
-
-	# 	# database layer
-	# 	if 'table' in uri_components and (not uri_components['table'] in param["layers"].keys() or not param["layers"][uri_components['table']]["driver"] == "postgres"):
-
-	# 		self.parent.iface.messageBar().pushMessage("Warning", f"Capa seleccionada no permesa! Has de seleccionar al menys una capa de {param['layers']}", level=Qgis.Warning, duration=5)
-	# 		return False
-
-	# 	# file layer
-	# 	if 'path' in uri_components:
-	# 		self.parent.iface.messageBar().pushMessage("Warning", f"Capa seleccionada no permesa! Has de seleccionar al menys una capa de {param['layers']}", level=Qgis.Warning, duration=5)
-	# 		return False
-
-	# 	return True

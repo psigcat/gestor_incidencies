@@ -7,9 +7,8 @@ from datetime import datetime
 
 
 DEFAULT_DATE = "9999-12-31"
-COMBO_SELECT_TEXT = '(Seleccionar)'
-FIELDNAMES = ['data_inici', 'descripcio', 'usuari', 'estat']
-MANDATORY_FIELDS = ['data_inici']
+COMBO_SELECT_TEXT = "(Seleccionar)"
+STATIC_FIELDS = ["usuari"]
 
 
 class gestor_incidencies_database:
@@ -63,6 +62,19 @@ class gestor_incidencies_database:
 		self.db.close()
 		self.db_open = False
 		return True
+
+
+	def get_user_name(self):
+		""" Get the user name from the database connection """
+
+		query = QSqlQuery(self.db)
+		if query.exec("SELECT current_user"):
+			if query.next():
+				user_name = query.value(0)
+				print(f"Connected as: {user_name}")
+				return user_name
+
+		return ""
 
 
 	def reset_info(self):
@@ -152,6 +164,12 @@ class gestor_incidencies_database:
 
 		str_fields = ", ".join(list_fields)
 		str_values = "', '".join(list_values)
+
+		print(str_fields, str_values)
+
+		for field in STATIC_FIELDS:
+			str_fields += f", {field}"
+			str_values += f"', '{self.get_user_name()}"
 		
 		return str_fields, str_values
 		
@@ -159,14 +177,14 @@ class gestor_incidencies_database:
 	def insert_incidencia(self, selected_features):
 		""" insert new incidencia """
 
-		if not self.check_fields_mandatory():
+		if not self.check_fields_mandatory(self.param['fields_mandatory']):
 			return False
 
 		data = self.prepare_data()
 
 		str_fields, str_values = self.prepare_insert(data)
 
-		sql = f"INSERT INTO {self.param['schema']}.{self.param['tbl_incidencies']} ({str_fields}) VALUES ('{str_values}') RETURNING id;"
+		sql = f"INSERT INTO {self.param['tbl_incidencies']} ({str_fields}) VALUES ('{str_values}') RETURNING id;"
 		
 		incidencia_id = self.insert_sql(sql)
 		self.reset_info()
@@ -177,7 +195,7 @@ class gestor_incidencies_database:
 	def insert_sql(self, sql):
 		""" insert SQL query into database """
 
-		print("execute", sql)
+		print("execute:", sql)
 		
 		try:
 			self.reset_info()
@@ -188,7 +206,7 @@ class gestor_incidencies_database:
 				self.last_error = query.lastError().text()
 				return None
 			
-			self.parent.dlg.messageBar.pushMessage(f"Nova incidencia creada a base de dades amb id {query.lastInsertId()}.", level=Qgis.Success, duration=5)
+			self.parent.dlg.messageBar.pushMessage(f"Nova incidencia creada a base de dades amb id '{query.lastInsertId()}'.", level=Qgis.Success, duration=5)
 
 			return query.lastInsertId()
 
@@ -212,7 +230,7 @@ class gestor_incidencies_database:
 
 				str_fields = "nom_capa, id_capa, id_incidencia"
 				str_values = f"'{layer}', {feature.id()}, {incidencia_id}"
-				sql = f"INSERT INTO {self.param['schema']}.{self.param['tbl_correlacions']} ({str_fields}) VALUES ({str_values});"
+				sql = f"INSERT INTO {self.param['tbl_correlacions']} ({str_fields}) VALUES ({str_values});"
 
 				self.insert_sql(sql)
 
@@ -221,7 +239,7 @@ class gestor_incidencies_database:
 		""" Create dictionary with field names and widget values """
 
 		data = {}
-		for fieldname in FIELDNAMES:
+		for fieldname in self.param['fields']:
 			widget, widget_data = self.get_widget_data(fieldname)
 			if widget is None:
 				print(f"El camp de la taula no té cap component associat: {fieldname}")
@@ -288,7 +306,7 @@ class gestor_incidencies_database:
 	
 		str_set = self.prepare_udpate(data)
 
-		sql = f"UPDATE {self.param['schema']}.{self.param['table']} "
+		sql = f"UPDATE {self.param['table']} "
 		sql += f"SET {str_set} "
 		sql += f"WHERE id={id};"
 		
@@ -299,13 +317,13 @@ class gestor_incidencies_database:
 	def delete_record(self, id):
 		""" delete incidencia by id """
 
-		sql = f"DELETE FROM {self.param['schema']}.{self.param['table']} WHERE id={id}"
+		sql = f"DELETE FROM {self.param['table']} WHERE id={id}"
 		print("execute", sql)
 		
 		self.exec_sql(sql)
 
 
-	def check_fields_mandatory(self, list_mandatory=MANDATORY_FIELDS):
+	def check_fields_mandatory(self, list_mandatory):
 
 		for fieldname in list_mandatory:
 			print(fieldname)

@@ -184,25 +184,25 @@ class gestor_incidencies:
         self.selected_features = self.utils.get_all_selected_features()
 
         if len(self.selected_features) < 1:
-            self.iface.messageBar().pushMessage("Warning", f"No element seleccionat! Has de seleccionar al menys un element.", level=Qgis.Warning, duration=5)
+            self.iface.messageBar().pushMessage("Info", f"No element seleccionat! Has de seleccionar al menys un element.", level=Qgis.Info, duration=5)
             return
 
         total_feature_count = sum(len(features) for features in self.selected_features.values())
-        print(f"{total_feature_count} elements seleccionats en {len(self.selected_features)} capes.")
+        print(f"{total_feature_count} objectes seleccionats a la capa {len(self.selected_features)} capes.")
 
         if not self.utils.check_selection_validity(self.selected_features, self.param):
             return
-
-        print("open")
 
         if self.first_start == True:
             self.first_start = False
             self.dlg = gestor_incidenciesDialog()
             self.dlg.buttonBox.accepted.disconnect()
             self.dlg.buttonBox.accepted.connect(self.process)
-            self.utils.show_resume_groupbox(self.selected_features)
+            self.iface.mapCanvas().selectionChanged.connect(self.refresh_my_ui)
 
+        self.utils.show_resume_groupbox(self.selected_features)
         self.dlg.show()
+
         result = self.dlg.exec_()
 
         if result:
@@ -215,3 +215,11 @@ class gestor_incidencies:
         self.db = gestor_incidencies_database(self, self.plugin_dir, self.param['db'])
         if self.db:
             self.db.insert_incidencia(self.selected_features)
+
+
+    def refresh_my_ui(self):
+        """ refresh dialog with actually selected features """
+
+        if self.dlg.isVisible():
+            data = self.utils.get_all_selected_features()
+            self.utils.show_resume_groupbox(data)

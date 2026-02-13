@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>897</width>
-    <height>401</height>
+    <height>360</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -25,48 +25,52 @@
     </widget>
    </item>
    <item>
+    <widget class="QGroupBox" name="resum_box">
+     <property name="title">
+      <string>Resum elements seleccionats</string>
+     </property>
+     <layout class="QVBoxLayout" name="verticalLayout_2"/>
+    </widget>
+   </item>
+   <item>
     <widget class="QGroupBox" name="groupBox">
      <property name="title">
-      <string>Incidencia nova</string>
+      <string>Crear incidencia nova</string>
      </property>
      <layout class="QGridLayout" name="gridLayout">
-      <item row="2" column="2">
-       <widget class="QLineEdit" name="incidencia_persona"/>
-      </item>
-      <item row="0" column="2">
-       <widget class="QDateEdit" name="incidencia_data">
-        <property name="dateTime">
-         <datetime>
-          <hour>23</hour>
-          <minute>59</minute>
-          <second>59</second>
-          <year>9999</year>
-          <month>12</month>
-          <day>31</day>
-         </datetime>
-        </property>
-        <property name="calendarPopup">
-         <bool>true</bool>
+      <item row="2" column="0">
+       <widget class="QLabel" name="label_4">
+        <property name="text">
+         <string>Estat:</string>
         </property>
        </widget>
       </item>
-      <item row="3" column="2">
-       <widget class="QComboBox" name="incidencia_estat"/>
-      </item>
-      <item row="2" column="0">
-       <widget class="QLabel" name="label_3">
-        <property name="text">
-         <string>Persona:</string>
-        </property>
+      <item row="2" column="2">
+       <widget class="QComboBox" name="estat">
+        <item>
+         <property name="text">
+          <string>obert</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>en tràmit</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>tancat</string>
+         </property>
+        </item>
        </widget>
       </item>
       <item row="1" column="2">
-       <widget class="QPlainTextEdit" name="incidencia_descripcio"/>
+       <widget class="QPlainTextEdit" name="descripcio"/>
       </item>
-      <item row="0" column="0">
-       <widget class="QLabel" name="label">
-        <property name="text">
-         <string>Data:</string>
+      <item row="3" column="2">
+       <widget class="QgsFileWidget" name="fotos">
+        <property name="storageMode">
+         <enum>QgsFileWidget::GetMultipleFiles</enum>
         </property>
        </widget>
       </item>
@@ -78,34 +82,43 @@
        </widget>
       </item>
       <item row="3" column="0">
-       <widget class="QLabel" name="label_4">
-        <property name="text">
-         <string>Estat:</string>
-        </property>
-       </widget>
-      </item>
-      <item row="4" column="0">
        <widget class="QLabel" name="label_5">
         <property name="text">
          <string>Fotos:</string>
         </property>
        </widget>
       </item>
-      <item row="4" column="2">
-       <widget class="QgsFileWidget" name="incidencia_fotos">
-        <property name="storageMode">
-         <enum>QgsFileWidget::GetMultipleFiles</enum>
+      <item row="0" column="0">
+       <widget class="QLabel" name="label">
+        <property name="text">
+         <string>Data:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="2">
+       <widget class="QDateEdit" name="data_inici">
+        <property name="dateTime">
+         <datetime>
+          <hour>0</hour>
+          <minute>0</minute>
+          <second>0</second>
+          <year>9999</year>
+          <month>12</month>
+          <day>31</day>
+         </datetime>
+        </property>
+        <property name="displayFormat">
+         <string>d/M/yyyy</string>
+        </property>
+        <property name="calendarPopup">
+         <bool>true</bool>
+        </property>
+        <property name="currentSectionIndex">
+         <number>0</number>
         </property>
        </widget>
       </item>
      </layout>
-    </widget>
-   </item>
-   <item>
-    <widget class="QGroupBox" name="resum_box">
-     <property name="title">
-      <string>Resum elements seleccionats</string>
-     </property>
     </widget>
    </item>
    <item>
@@ -122,7 +135,7 @@
     </spacer>
    </item>
    <item>
-    <widget class="QDialogButtonBox" name="button_box">
+    <widget class="QDialogButtonBox" name="buttonBox">
      <property name="orientation">
       <enum>Qt::Horizontal</enum>
      </property>
@@ -150,7 +163,7 @@
  <resources/>
  <connections>
   <connection>
-   <sender>button_box</sender>
+   <sender>buttonBox</sender>
    <signal>accepted()</signal>
    <receiver>gestor_incidenciesDialogBase</receiver>
    <slot>accept()</slot>
@@ -166,7 +179,7 @@
    </hints>
   </connection>
   <connection>
-   <sender>button_box</sender>
+   <sender>buttonBox</sender>
    <signal>rejected()</signal>
    <receiver>gestor_incidenciesDialogBase</receiver>
    <slot>reject()</slot>
