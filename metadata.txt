@@ -21,5 +21,5 @@ experimental=False
 deprecated=False
 server=False
 
-# Uncomment the following line and add your changelog:
-# changelog=
+changelog=
+	0.1 - initial commit: saves incidencia with fotos and feature relations (#1)
