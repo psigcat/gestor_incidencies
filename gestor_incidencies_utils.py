@@ -33,9 +33,10 @@ class gestor_incidencies_utils:
 					"service": config["db"]["service"],
 					"tbl_incidencies": config["db"]["tbl_incidencies"],
 					"tbl_correlacions": config["db"]["tbl_correlacions"],
-					"tbl_fotos": config["db"]["tbl_incidencies"],
+					"tbl_fotos": config["db"]["tbl_fotos"],
 					"fields": config["db"]["fields"],
-					"fields_mandatory": config["db"]["fields_mandatory"]
+					"fields_mandatory": config["db"]["fields_mandatory"],
+					"folder_fotos": config["db"]["folder_fotos"]
 				}
 				param["layers"] = config["layers"]
 
@@ -130,7 +131,7 @@ class gestor_incidencies_utils:
 			count = len(features)
 			geom_name = QgsWkbTypes.geometryDisplayString(layer.geometryType())
 			label_text = f"{count} objectes seleccionats a la capa {layer_name} [{geom_name}]"
-			print(i, label_text)
+			#print(i, label_text)
 			
 			# Column 0: The Info Label
 			label = QLabel(label_text)

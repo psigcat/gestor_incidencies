@@ -165,7 +165,7 @@ class gestor_incidencies:
 
         self.utils = gestor_incidencies_utils(self, self.plugin_dir)
         self.param = self.utils.read_config()
-        print(self.param)
+        #print(self.param)
 
 
     def unload(self):

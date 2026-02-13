@@ -26,7 +26,6 @@ class gestor_incidencies_database:
 		self.num_records = None
 
 		DEFAULT_DATE = datetime.today().strftime('%Y-%m-%d')
-		print(DEFAULT_DATE)
 
 		self.db = self.open_database()
 
@@ -48,7 +47,7 @@ class gestor_incidencies_database:
 			self.last_error = f"No s'ha pogut obrir la Base de Dades del servidor\n\n{db.lastError().text()}"
 			return None
 
-		print("connected to database")
+		#print("connected to database")
 
 		self.db_open = True
 		return db
@@ -86,52 +85,6 @@ class gestor_incidencies_database:
 		self.num_records = None
 
 
-	def exec_sql(self, sql):
-		""" Execute SQL (Insert or Update) """
-
-		self.reset_info()
-		query = QSqlQuery(self.db)
-		status = query.exec(sql)
-		if not status:
-			self.last_error = query.lastError().text()
-		return status
-
-
-	def get_rows(self, sql):
-		""" Execute SQL (Select) and return rows """
-
-		print("execute", sql)
-
-		self.reset_info()
-		query = QSqlQuery(self.db)
-		status = query.exec(sql)
-		if not status:
-			self.last_error = query.lastError().text()
-			return None
-
-		# Get number of records
-		self.num_records = query.size()
-		if self.num_records == 0:
-			self.last_msg = "No s'ha trobat cap registre amb els filtres seleccionats"
-			return None
-
-		# Get number of fields
-		record = query.record()
-		self.num_fields = record.count()
-		if self.num_fields == 0:
-			self.last_msg = "No s'han especificat camps a retornar"
-			return None
-
-		rows = []
-		while query.next():
-			row = []
-			for i in range(self.num_fields):
-				row.append(query.value(i))
-			rows.append(row)
-
-		return rows
-
-
 	# def get_table_fields(self):
 		# """ Get all fields from table incidencies """
 
@@ -165,31 +118,11 @@ class gestor_incidencies_database:
 		str_fields = ", ".join(list_fields)
 		str_values = "', '".join(list_values)
 
-		print(str_fields, str_values)
-
 		for field in STATIC_FIELDS:
 			str_fields += f", {field}"
 			str_values += f"', '{self.get_user_name()}"
 		
 		return str_fields, str_values
-		
-		
-	def insert_incidencia(self, selected_features):
-		""" insert new incidencia """
-
-		if not self.check_fields_mandatory(self.param['fields_mandatory']):
-			return False
-
-		data = self.prepare_data()
-
-		str_fields, str_values = self.prepare_insert(data)
-
-		sql = f"INSERT INTO {self.param['tbl_incidencies']} ({str_fields}) VALUES ('{str_values}') RETURNING id;"
-		
-		incidencia_id = self.insert_sql(sql)
-		self.reset_info()
-		if incidencia_id:
-			self.insert_incidencia_correlacio(incidencia_id, selected_features)
 
 
 	def insert_sql(self, sql):
@@ -217,22 +150,55 @@ class gestor_incidencies_database:
 				print(f"SQL: {sql}")
 			return False
 
+		
+	def insert_incidencia(self, selected_features):
+		""" insert new incidencia """
+
+		if not self.check_fields_mandatory(self.param['fields_mandatory']):
+			return False
+
+		data = self.prepare_data()
+
+		str_fields, str_values = self.prepare_insert(data)
+
+		sql = f"INSERT INTO {self.param['tbl_incidencies']} ({str_fields}) VALUES ('{str_values}') RETURNING id;"
+		
+		incidencia_id = self.insert_sql(sql)
+		#self.reset_info()
+
+		if incidencia_id:
+			self.insert_incidencia_correlacio(incidencia_id, selected_features)
+			self.insert_incidencia_foto(incidencia_id)
+
 
 	def insert_incidencia_correlacio(self, incidencia_id, selected_features):
 		""" insert new incidencia relations with selected features """
 
-		print("insert selected features into incidencia", incidencia_id)
+		#print("insert selected features into incidencia", incidencia_id)
 
 		for layer in selected_features:
 			for feature in selected_features[layer]:
-
-				print(layer, feature.id())
 
 				str_fields = "nom_capa, id_capa, id_incidencia"
 				str_values = f"'{layer}', {feature.id()}, {incidencia_id}"
 				sql = f"INSERT INTO {self.param['tbl_correlacions']} ({str_fields}) VALUES ({str_values});"
 
 				self.insert_sql(sql)
+
+
+	def insert_incidencia_foto(self, incidencia_id):
+		""" insert fotos for new incidencia """
+
+		#print("insert fotos into incidencia", incidencia_id)
+
+		fotos = self.parent.dlg.fotos.splitFilePaths(self.parent.dlg.fotos.filePath())
+
+		for foto in fotos:
+			str_fields = "id_incidencia, link_foto"
+			str_values = f"{incidencia_id}, '{foto}'"
+			sql = f"INSERT INTO {self.param['tbl_fotos']} ({str_fields}) VALUES ({str_values});"
+
+			self.insert_sql(sql)
 
 
 	def prepare_data(self):
@@ -272,61 +238,9 @@ class gestor_incidencies_database:
 		return widget, data
 
 
-	def prepare_udpate(self, data):
-		""" prepare sql query """
-		
-		sql = None
-		list_fields = []
-		list_values = []
-		
-		# Iterate over field names and values from dictionary data
-		for field, value in data.items():
-			if value in ('(Seleccionar)', '--'):
-				continue
-			if value != '' and value != DEFAULT_DATE:
-				value = value.replace("'", "''").strip()
-				list_fields.append(field)
-				list_values.append(value)
-
-		str_values = ""
-		i = 0
-		for field in list_fields:
-			if str_values != "":
-				str_values += ", "
-			str_values += field + "=" + list_values[i]
-			i+=1
-			
-		print(str_values)
-		
-		return str_values
-		
-
-	def update_record(self, data, id):
-		""" update existing incidencia """
-	
-		str_set = self.prepare_udpate(data)
-
-		sql = f"UPDATE {self.param['table']} "
-		sql += f"SET {str_set} "
-		sql += f"WHERE id={id};"
-		
-		print("execute", sql)
-		self.exec_sql(sql)
-
-				
-	def delete_record(self, id):
-		""" delete incidencia by id """
-
-		sql = f"DELETE FROM {self.param['table']} WHERE id={id}"
-		print("execute", sql)
-		
-		self.exec_sql(sql)
-
-
 	def check_fields_mandatory(self, list_mandatory):
 
 		for fieldname in list_mandatory:
-			print(fieldname)
 			widget, widget_data = self.get_widget_data(fieldname)
 			if widget is None:
 				self.parent.dlg.messageBar.pushMessage(f"El camp no té cap component associat: {fieldname}", level=Qgis.Warning, duration=3)
