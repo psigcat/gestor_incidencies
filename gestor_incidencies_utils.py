@@ -36,6 +36,7 @@ class gestor_incidencies_utils:
 					"tbl_fotos": config["db"]["tbl_fotos"],
 					"fields": config["db"]["fields"],
 					"fields_mandatory": config["db"]["fields_mandatory"],
+					"field_user": config["db"]["field_user"],
 					"folder_fotos": config["db"]["folder_fotos"]
 				}
 				param["layers"] = config["layers"]

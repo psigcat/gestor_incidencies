@@ -4,11 +4,12 @@ from PyQt5.QtSql import QSqlDatabase, QSqlQuery
 from qgis.PyQt.QtWidgets import QLineEdit, QDateEdit, QComboBox, QPlainTextEdit
 
 from datetime import datetime
+import shutil
+import os
 
 
-DEFAULT_DATE = "9999-12-31"
+DEFAULT_DATE = None
 COMBO_SELECT_TEXT = "(Seleccionar)"
-STATIC_FIELDS = ["usuari"]
 
 
 class gestor_incidencies_database:
@@ -83,20 +84,6 @@ class gestor_incidencies_database:
 		self.last_msg = None
 		self.num_fields = None
 		self.num_records = None
-
-
-	# def get_table_fields(self):
-		# """ Get all fields from table incidencies """
-
-		# #try:
-		# print(f"Obtenint llistat de camps de la taula '{self.param['table']}'")
-		# sql = f"SELECT * FROM {self.param['table']} WHERE 1=0"
-		# self.cursor.execute(sql)
-		# self.fieldnames = [desc[0] for desc in self.cursor.description]
-		# # except (Exception, psycopg2.Error) as error:
-			# # print(f"Error al recuperar camps de la taula: {error}")
-			# # return False
-		# return True
 		
 	
 	def prepare_insert(self, data):
@@ -118,9 +105,9 @@ class gestor_incidencies_database:
 		str_fields = ", ".join(list_fields)
 		str_values = "', '".join(list_values)
 
-		for field in STATIC_FIELDS:
-			str_fields += f", {field}"
-			str_values += f"', '{self.get_user_name()}"
+		# add static field user
+		str_fields += f", {self.param['field_user']}"
+		str_values += f"', '{self.get_user_name()}"
 		
 		return str_fields, str_values
 
@@ -149,56 +136,6 @@ class gestor_incidencies_database:
 			if sql:
 				print(f"SQL: {sql}")
 			return False
-
-		
-	def insert_incidencia(self, selected_features):
-		""" insert new incidencia """
-
-		if not self.check_fields_mandatory(self.param['fields_mandatory']):
-			return False
-
-		data = self.prepare_data()
-
-		str_fields, str_values = self.prepare_insert(data)
-
-		sql = f"INSERT INTO {self.param['tbl_incidencies']} ({str_fields}) VALUES ('{str_values}') RETURNING id;"
-		
-		incidencia_id = self.insert_sql(sql)
-		#self.reset_info()
-
-		if incidencia_id:
-			self.insert_incidencia_correlacio(incidencia_id, selected_features)
-			self.insert_incidencia_foto(incidencia_id)
-
-
-	def insert_incidencia_correlacio(self, incidencia_id, selected_features):
-		""" insert new incidencia relations with selected features """
-
-		#print("insert selected features into incidencia", incidencia_id)
-
-		for layer in selected_features:
-			for feature in selected_features[layer]:
-
-				str_fields = "nom_capa, id_capa, id_incidencia"
-				str_values = f"'{layer}', {feature.id()}, {incidencia_id}"
-				sql = f"INSERT INTO {self.param['tbl_correlacions']} ({str_fields}) VALUES ({str_values});"
-
-				self.insert_sql(sql)
-
-
-	def insert_incidencia_foto(self, incidencia_id):
-		""" insert fotos for new incidencia """
-
-		#print("insert fotos into incidencia", incidencia_id)
-
-		fotos = self.parent.dlg.fotos.splitFilePaths(self.parent.dlg.fotos.filePath())
-
-		for foto in fotos:
-			str_fields = "id_incidencia, link_foto"
-			str_values = f"{incidencia_id}, '{foto}'"
-			sql = f"INSERT INTO {self.param['tbl_fotos']} ({str_fields}) VALUES ({str_values});"
-
-			self.insert_sql(sql)
 
 
 	def prepare_data(self):
@@ -251,3 +188,49 @@ class gestor_incidencies_database:
 				return False
 
 		return True
+
+		
+	def insert_incidencia(self, selected_features):
+		""" insert new incidencia """
+
+		if not self.check_fields_mandatory(self.param['fields_mandatory']):
+			return False
+
+		data = self.prepare_data()
+		str_fields, str_values = self.prepare_insert(data)
+		sql = f"INSERT INTO {self.param['tbl_incidencies']} ({str_fields}) VALUES ('{str_values}') RETURNING id;"
+		
+		incidencia_id = self.insert_sql(sql)
+		if incidencia_id:
+			self.insert_incidencia_correlacio(incidencia_id, selected_features)
+			self.insert_incidencia_foto(incidencia_id)
+
+
+	def insert_incidencia_correlacio(self, incidencia_id, selected_features):
+		""" insert new incidencia relations with selected features """
+
+		for layer in selected_features:
+			for feature in selected_features[layer]:
+				str_fields = "nom_capa, id_capa, id_incidencia"
+				str_values = f"'{layer}', {feature.id()}, {incidencia_id}"
+				sql = f"INSERT INTO {self.param['tbl_correlacions']} ({str_fields}) VALUES ({str_values});"
+
+				self.insert_sql(sql)
+
+
+	def insert_incidencia_foto(self, incidencia_id):
+		""" insert fotos for new incidencia """
+
+		fotos = self.parent.dlg.fotos.splitFilePaths(self.parent.dlg.fotos.filePath())
+
+		for foto in fotos:
+			str_fields = "id_incidencia, link_foto"
+			str_values = f"{incidencia_id}, '{foto}'"
+			sql = f"INSERT INTO {self.param['tbl_fotos']} ({str_fields}) VALUES ({str_values});"
+
+			self.insert_sql(sql)
+
+			# copy foto to configured folder
+			file_name = os.path.basename(foto)
+			dest = os.path.join(self.param['folder_fotos'], file_name)
+			shutil.copyfile(foto, dest)
